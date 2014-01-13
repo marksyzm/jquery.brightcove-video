@@ -4,7 +4,7 @@
  * Copyright © 2013 Carmine Olivo (carmineolivo@gmail.com)
  * Released under the (http://co.mit-license.org/) MIT license
  *
- * @requires
+ * @require
  * BrightcoveExperiences (http://admin.brightcove.com/js/BrightcoveExperiences.js)
  * jQuery (http://jquery.com/download/)
  *
@@ -57,16 +57,16 @@ var
 
 			this.each( function() {
 				var $container = $( this ),
-				    data = $container.data( "brightcoveVideo" ),
-				    usrTemplateLoadHandler,
-				    usrTemplateReadyHandler,
-				    usrTemplateErrorHandler,
-				    playerObject,
-				    params;
+					data = $container.data( "brightcoveVideo" ),
+					usrTemplateLoadHandler,
+					usrTemplateReadyHandler,
+					usrTemplateErrorHandler,
+					playerObject,
+					params;
 
 				// if the player hasn't been initialized yet
 				if ( ! data ) {
-				    params = $.extend( {
+					params = $.extend( {
 							/*
 							autoStart: null,
 							bgcolor: null,
@@ -87,7 +87,7 @@ var
 							isUI: true,
 							isVid: true,
 							wmode: "transparent"
-				    	}, options );
+						}, options );
 
 					brightcove.JBVData.onTemplateLoad[ "player" + brightcove.JBVData.countPlayers ] = function( experienceID ) {
 						data.experienceID = experienceID;
@@ -98,8 +98,13 @@ var
 							data.player = brightcove.getExperience( experienceID );
 							data.isSmartPlayer = false;
 						}
-						data.videoPlayer = data.player.getModule( brightcove.api.modules.APIModules.VIDEO_PLAYER );
+						data.advertising = data.player.getModule( brightcove.api.modules.APIModules.ADVERTISING );
+						data.auth = data.player.getModule( brightcove.api.modules.APIModules.AUTH );
+						data.captions = data.player.getModule( brightcove.api.modules.APIModules.CAPTIONS );
+						data.content = data.player.getModule( brightcove.api.modules.APIModules.CONTENT );
+						data.cuePoints = data.player.getModule( brightcove.api.modules.APIModules.CUE_POINTS );
 						data.experience = data.player.getModule( brightcove.api.modules.APIModules.EXPERIENCE );
+						data.videoPlayer = data.player.getModule( brightcove.api.modules.APIModules.VIDEO_PLAYER );
 
 						$container.data( "brightcoveVideo", data );
 
@@ -158,11 +163,11 @@ var
 
 			return this.each( function() {
 				var $this = $( this ),
-				    data = $this.data( "brightcoveVideo" ),
-				    $experience = $( "#" + data.experienceID ),
-				    isSmartPlayer = data.isSmartPlayer,
-				    experience = data.experience,
-				    target = data.target;
+					data = $this.data( "brightcoveVideo" ),
+					$experience = $( "#" + data.experienceID ),
+					isSmartPlayer = data.isSmartPlayer,
+					experience = data.experience,
+					target = data.target;
 
 				// Namespacing FTW :)
 				$( window ).unbind( ".brightcoveVideo" );
@@ -218,7 +223,7 @@ var
 		onMediaEvent: function( event_name, handler, priority ) {
 			return this.each( function() {
 				var data = $( this ).data( "brightcoveVideo" ),
-				    events = data.isSmartPlayer ? brightcove.api.events.MediaEvent : BCMediaEvent;
+					events = data.isSmartPlayer ? brightcove.api.events.MediaEvent : BCMediaEvent;
 
 				data.videoPlayer
 					.addEventListener( events[event_name], handler, priority );
@@ -231,7 +236,7 @@ var
 		onExperienceEvent: function( event_name, handler, priority ) {
 			return this.each( function() {
 				var data = $( this ).data( "brightcoveVideo" ),
-				    events = data.isSmartPlayer ? brightcove.api.events.ExperienceEvent : BCExperienceEvent;
+					events = data.isSmartPlayer ? brightcove.api.events.ExperienceEvent : BCExperienceEvent;
 
 				data.experience
 					.addEventListener( events[event_name], handler, priority );
@@ -244,7 +249,7 @@ var
 		onCuePointEvent: function( event_name, handler, priority ) {
 			return this.each( function() {
 				var data = $( this ).data( "brightcoveVideo" ),
-				    events = data.isSmartPlayer ? brightcove.api.events.CuePointEvent : BCCuePointEvent;
+					events = data.isSmartPlayer ? brightcove.api.events.CuePointEvent : BCCuePointEvent;
 
 				data.videoPlayer
 					.addEventListener( events[event_name], handler, priority );
@@ -259,8 +264,8 @@ var
 
 			this.each( function() {
 				var $this = $( this ),
-				    data = $this.data( "brightcoveVideo" ),
-				    $experience, position, $overlay;
+					data = $this.data( "brightcoveVideo" ),
+					$experience, position, $overlay;
 
 				if ( ! data.overlay ) {
 					$experience = $( "#" + data.experienceID );
@@ -323,6 +328,59 @@ var
 			return this.each( function() {
 				$( this ).data( "brightcoveVideo" ).videoPlayer
 					.seek( time );
+			} );
+		},
+
+		/**
+		 * Sets audio volume level (0-1).
+		 *
+		 * @param {number} time The time in seconds to seek to
+		 */
+		setVolume: function( amount ) {
+			return this.each( function() {
+				var videoPlayer;
+
+				if (typeof amount === "number") {
+					videoPlayer = $( this ).data( "brightcoveVideo" ).videoPlayer;
+
+					amount = Math.min(amount, 1); //sanitize
+					amount = Math.max(amount, 0);
+
+					if (videoPlayer.setVolume) {
+						videoPlayer.setVolume( amount );
+					}
+				}
+			} );
+		},
+
+		getVolume: function () {
+			var amount = null;
+
+			this.each( function () {
+				var videoPlayer;
+
+				videoPlayer = $( this ).data( "brightcoveVideo" ).videoPlayer;
+
+				if (videoPlayer.getVolume) {
+					amount = videoPlayer.getVolume( );
+				}
+			} );
+
+			return amount;
+		},
+
+		/**
+		 * Toggle enabling of captions
+		 * @param enabled
+		 * @returns {*|each|HTMLElement|each|Array|Object|String|each}
+		 */
+		setCaptionsEnabled: function( enabled ) {
+			return this.each( function() {
+				var captions = $( this ).data( "brightcoveVideo" ).captions;
+
+				if (captions.setCaptionsEnabled) {
+					captions.setCaptionsEnabled( enabled );
+				}
 			} );
 		},
 
